@@ -380,7 +380,18 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    position, visited = state
+
+    # Lower bound on cost-to-go: you must eventually reach the farthest
+    # unvisited corner, so the remaining path is at least that Manhattan
+    # distance. Ignoring walls keeps this an admissible relaxation, and the
+    # max of 1-Lipschitz distances is itself 1-Lipschitz, so it is consistent.
+    distances = [
+        abs(position[0] - corner[0]) + abs(position[1] - corner[1])
+        for corner, was_visited in zip(corners, visited)
+        if not was_visited
+    ]
+    return max(distances) if distances else 0
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
