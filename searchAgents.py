@@ -485,7 +485,45 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    foodList = foodGrid.asList()
+
+    if not foodList:
+        return 0
+
+    distanceCache = problem.heuristicInfo.setdefault('mazeDistances', {})
+
+    def cachedMazeDistance(a, b):
+        key = (a, b) if a <= b else (b, a)
+        if key not in distanceCache:
+            distanceCache[key] = mazeDistance(key[0], key[1], problem.startingGameState)
+        return distanceCache[key]
+
+    # --- Version 1: max maze-distance to a remaining dot ---
+    return max(cachedMazeDistance(position, food) for food in foodList)
+
+    # --- Version 2: nearest dot + MST over the remaining dots ---
+    # Any all-dots walk must (a) reach some dot first -- at least the distance to
+    # the nearest one -- and (b) afterwards connect every remaining dot, which is
+    # at least the weight of the cheapest tree spanning them (the MST). Keeping
+    # Pacman out of the MST avoids the hub/eat consistency violation.
+    # nearest = min(cachedMazeDistance(position, food) for food in foodList)
+
+    # # Prim's algorithm over the dots only.
+    # toAdd = set(foodList)
+    # start = toAdd.pop()
+    # keyDistance = {food: cachedMazeDistance(start, food) for food in toAdd}
+
+    # mstWeight = 0
+    # while toAdd:
+    #     nextNode = min(toAdd, key=lambda f: keyDistance[f])
+    #     mstWeight += keyDistance[nextNode]
+    #     toAdd.remove(nextNode)
+    #     for food in toAdd:
+    #         d = cachedMazeDistance(nextNode, food)
+    #         if d < keyDistance[food]:
+    #             keyDistance[food] = d
+
+    # return nearest + mstWeight
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
